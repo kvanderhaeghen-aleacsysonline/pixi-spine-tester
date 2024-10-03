@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Pixi Spine Tester</title>
+        <link rel="icon" type="image/x-icon" href="/assets/aleacsys.ico" />
+        <script>
+            javascript: (function () {
+                var script = document.createElement('script');
+                script.onload = function () {
+                    var stats = new Stats();
+                    document.body.appendChild(stats.dom);
+                    requestAnimationFrame(function loop() {
+                        stats.update();
+                        requestAnimationFrame(loop);
+                    });
+                };
+                script.src = '//mrdoob.github.io/stats.js/build/stats.min.js';
+                document.head.appendChild(script);
+            })();
+        </script>
+        <link rel="stylesheet" href="./assets/style.css" />
+        <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0" />
+        <meta http-equiv="cache-control" content="no-cache" />
+        <meta http-equiv="expires" content="0" />
+        <meta http-equiv="pragma" content="no-cache" />
+    </head>
+    <body>
+        <div id="drop-zone" style="pointer-events: none"></div>
+        <img id="image-preview" />
+        <script src="./testProject.js"></script>
+        <div id="gameContainer">
+            <span>
+                <button id="add">Add</button>
+                <select id="spine-list"></select>
+                <select id="animation-list" disabled></select>
+            </span>
+            <div id="count">0 Spine Objects</div>
+            <div id="gameDiv"></div>
+        </div>
+        <script>
+            TestProject.launch();
+        </script>
+    </body>
+</html>

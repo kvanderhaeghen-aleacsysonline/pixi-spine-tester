@@ -1,0 +1,7 @@
+{
+    "extends": "./tsconfig.base",
+    "compilerOptions": {
+        "module": "ESNext",
+        "target": "ES6"
+    }
+}

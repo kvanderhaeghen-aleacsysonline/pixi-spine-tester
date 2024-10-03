@@ -1,0 +1,9 @@
+.idea
+node_modules
+/lib/
+/.rpt2*
+/.nyc_output
+/*.log
+/.vs
+/package-lock.json
+/dist

@@ -1,0 +1,9 @@
+{
+    "extends": "./tsconfig.base",
+    "compilerOptions": {
+        "module": "ESNext",
+        "target": "ESNext",
+        "noEmit": true
+    },
+    "include": ["../src/**/*.ts", "../build/**/*.ts"]
+}
