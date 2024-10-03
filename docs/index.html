@@ -1,4 +1,4 @@
-<!doctype html><html><head><title>Simple Pixi Slot</title><script>javascript: (function () {
+<!doctype html><html><head><title>Pixi Spine Tester</title><link rel="icon" type="image/x-icon" href="/assets/aleacsys.ico"/><script>javascript: (function () {
                 var script = document.createElement('script');
                 script.onload = function () {
                     var stats = new Stats();
@@ -10,4 +10,4 @@
                 };
                 script.src = '//mrdoob.github.io/stats.js/build/stats.min.js';
                 document.head.appendChild(script);
-            })();</script><link rel="stylesheet" href="./assets/style.css"/><meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1"/></head><body><script src="./testProject.js"></script><div id="gameContainer"><button id="start">Start</button><div id="gameDiv"></div></div><script>TestProject.launch();</script></body></html>
+            })();</script><link rel="stylesheet" href="./assets/style.css"/><meta name="viewport" content="width=device-width,height=device-height,initial-scale=1,maximum-scale=1"/><meta http-equiv="cache-control" content="no-cache"/><meta http-equiv="expires" content="0"/><meta http-equiv="pragma" content="no-cache"/></head><body><div id="drop-zone" style="pointer-events: none"></div><img id="image-preview"/><script src="./pixiSpineTest.js"></script><div id="gameContainer"><span><button id="add">Add</button> <select id="spine-list"></select> <select id="animation-list" disabled="disabled"></select></span><div id="count">0 Spine Objects</div><div id="gameDiv"></div></div><script>PixiSpineTest.launch();</script></body></html>

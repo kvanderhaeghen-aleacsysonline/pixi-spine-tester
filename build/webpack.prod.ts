@@ -42,7 +42,7 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
     devtool: 'source-map',
     mode: 'production',
     entry: {
-        testProject: './src/index.ts',
+        pixiSpineTest: './src/index.ts',
     },
     module: {
         rules: [

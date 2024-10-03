@@ -2,7 +2,7 @@ import { Project, IProject } from './project';
 
 type WindowExt = Window &
     typeof globalThis & {
-        TestProject: ProjectExports;
+        PixiSpineTest: ProjectExports;
     };
 
 interface ProjectExports {
@@ -15,7 +15,7 @@ export default ((): ProjectExports => {
         launch: inClosure.launch.bind(inClosure),
     };
     if (typeof window !== undefined) {
-        (window as WindowExt)['TestProject'] = pageReturn;
+        (window as WindowExt)['PixiSpineTest'] = pageReturn;
     }
     return pageReturn;
 })();

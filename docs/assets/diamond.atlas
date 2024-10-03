@@ -1,0 +1,12 @@
+diamond.tex1.png
+size:512,512
+filter:Linear,Linear
+pma:true
+bot
+bounds:317,235,155,193
+rotate:270
+mid
+bounds:310,354,156,107
+rotate:90
+top
+bounds:2,244,306,266

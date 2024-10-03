@@ -1,10 +1,9 @@
 html {
     width: 100%;
     height: 100%;
+}
 
-  }
-
-  body {
+body {
     width: 100%;
     height: 100%;
     background: #e2e0d8;
@@ -19,15 +18,22 @@ html {
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
     text-align: center;
-  }
+}
 
-  #gameContainer {
+#count {
+    font-family: 'Lucida Grande', Arial;
+    font-weight: bold;
+    font-size: 30px;
+    color: #bab6a7;
+}
+
+#gameContainer {
     width: 100%;
     text-align: center;
-    min-height:150px;
-  }
+    min-height: 150px;
+}
 
-  button {
+button {
     background: #bab6a7;
     border: none;
     outline: 0;
@@ -40,8 +46,40 @@ html {
     border-radius: 5px;
     cursor: pointer;
     margin-top: 30px;
-  }
+}
 
-  button:hover {
+select {
+    background: #bab6a7;
+    border: none;
+    outline: 0;
+    padding: 20px 50px;
+    margin: 0;
+    font-family: 'Lucida Grande', Arial;
+    font-weight: bold;
+    font-size: 40px;
+    color: #e2e0d8;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 30px;
+}
+
+img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+button:hover {
     background: #a6a294;
-  }
+}
+
+#drop-zone {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 101;
+}
