@@ -2,8 +2,10 @@ import _ from 'lodash';
 import * as PIXI from 'pixi.js';
 import { createTickEventHandler, ITickEventHandler, ResolvablePromise } from "@gp/utils";
 import { SkeletonData, Spine } from '@pixi-spine/all-4.1';
+import { AtlasAttachmentLoader, SkeletonJson } from '@pixi-spine/runtime-4.1';
+import * as pixiSpine from 'pixi-spine';
+
 import { SpineObject } from '../models/spineObject';
-import * as pixiSpine from "@esotericsoftware/spine-pixi";
 
 export class SpineMachine {
     private app?: PIXI.Application<HTMLCanvasElement>;
@@ -13,11 +15,13 @@ export class SpineMachine {
     private static SPINE_COUNT = 100;
     private spineList: SpineObject[] = [{
         name: "Diamond",
+        isBase64: false,
         atlasPath: "assets/diamond.atlas",
         jsonPath: "assets/diamond.json",
         texturePath: "assets/diamond.tex1.png"
     }, {
         name: "Theseus",
+        isBase64: false,
         atlasPath: "assets/theseus.atlas",
         jsonPath: "assets/theseus.json",
         texturePath: "assets/theseus.tex1.png"
@@ -122,6 +126,7 @@ export class SpineMachine {
                 // Init spine object
                 const spineObject: SpineObject = {
                     name: '',
+                    isBase64: true,
                     atlasPath: '',
                     jsonPath: '',
                     texturePath: '',
@@ -194,52 +199,61 @@ export class SpineMachine {
     }
 
     private addSpineObjects(): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            const spineObject = this.spineList[this.selectedSpineIndex];
-            PIXI.Assets.load(spineObject.jsonPath!).then((spineData) => {
-                if (!spineData) {
-                    console.error('Failed to load spine character.');
-                    return;
-                }
-
-                for (let i = 0; i < SpineMachine.SPINE_COUNT; i++) {
-                    this.createSpineObject(spineData.spineData);            // Create a new Spine animation
-                }
-                this.updateCounter();
-                resolve();
-            }).catch((error) => {
-                console.error('Error loading assets:', error);
-                reject(error);
-            });
-        })
-        
+        return this.loadSpineObject().then((data) => {
+            for (let i = 0; i < SpineMachine.SPINE_COUNT; i++) {
+                this.createSpineObject(data.spineData); // Create a new Spine animation
+            }
+            this.updateCounter();
+        });
     }
 
     private loadSpineAnimations(): Promise<void> {
-        return new Promise<void>(async (resolve, reject) => {
+        return this.loadSpineObject().then((data) => {
+            this.createSpineObject(data.spineData, true); // Create a new Spine animation
+        });
+    }
+
+    private loadSpineObject(): Promise<any>  {
+        return new Promise<any>(async (resolve, reject) => {
             const spineObject = this.spineList[this.selectedSpineIndex];
-            // PIXI.Assets.add({ alias: '', src: require(spineObject.texturePath) });
-            // PIXI.Assets.add({ alias: 'skeleton', src: require(spineObject.jsonPath) });
-            // PIXI.Assets.add({ alias: 'atlas', src: require(spineObject.atlasPath) });
-            // await PIXI.Assets.load(['skeleton', 'atlas']);
-            // const boy = pixiSpine.Spine.from('skeleton', 'atlas', {autoUpdate: true});
-            // console.error(boy);
+            if (spineObject.isBase64) {
+                try {
+                    const texture = PIXI.BaseTexture.from(spineObject.texturePath!);
 
-            // pixiSpine.AttachmentLoader()
-            // const skeleton = new pixiSpine.SkeletonJson();
-            // resolve();
-            PIXI.Assets.load(spineObject.jsonPath!).then((spineData) => {
-                if (!spineData) {
-                    console.error('Failed to load spine character.');
-                    return;
+                    // Decode base64 string to string
+                    const atlasEncoded = spineObject.atlasPath?.split(",")[1] ?? '';
+                    const atlasString = atob(atlasEncoded ?? '');
+                    const spineAtlas = new pixiSpine.TextureAtlas(atlasString, (atlasName, textureLoader) => {
+                        const atlasId = atlasName.split('.')[1];
+                        textureLoader(texture);
+                    });
+                    const skeletonParser = new SkeletonJson(new AtlasAttachmentLoader(spineAtlas));
+
+                    // Decode base64 string to string
+                    const animationEncoded = spineObject.jsonPath?.split(",")[1] ?? '';
+                    const animationString = atob(animationEncoded ?? '');
+                    // Parse string as JSON data
+                    const jsonData = JSON.parse(animationString);
+                    resolve({ spineData: skeletonParser.readSkeletonData(jsonData) as pixiSpine.ISkeletonData });
+                } catch (error) {
+                    console.error('Error loading assets:', error);
+                    reject(error);
                 }
-
-                this.createSpineObject(spineData.spineData, true); // Create a new Spine animation
-                resolve();
-            }).catch((error) => {
-                console.error('Error loading assets:', error);
-                reject(error);
-            });
+            } else {
+                PIXI.Assets.load(spineObject.jsonPath!).then((data) => {
+                    if (!data) {
+                        console.error('Failed to load spine object.');
+                        reject(data);
+                        return;
+                    }
+                    resolve(data);
+                }).catch((error) => {
+                    console.error('Error loading assets:', error);
+                    reject(error);
+                });
+            }
+            
+            
         })
     }
 
