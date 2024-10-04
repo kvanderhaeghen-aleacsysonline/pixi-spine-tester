@@ -20,7 +20,7 @@ body {
     text-align: center;
 }
 
-#count {
+.counter {
     font-family: 'Lucida Grande', Arial;
     font-weight: bold;
     font-size: 30px;
@@ -37,30 +37,38 @@ button {
     background: #bab6a7;
     border: none;
     outline: 0;
-    padding: 20px 50px;
+    padding: 15px 38px;
     margin: 0;
     font-family: 'Lucida Grande', Arial;
     font-weight: bold;
-    font-size: 40px;
+    font-size: 30px;
     color: #e2e0d8;
     border-radius: 5px;
     cursor: pointer;
     margin-top: 30px;
 }
 
+button:disabled {
+    background: rgba(186, 182, 167, 0.5);
+}
+
 select {
     background: #bab6a7;
     border: none;
     outline: 0;
-    padding: 20px 50px;
+    padding: 15px 38px;
     margin: 0;
     font-family: 'Lucida Grande', Arial;
     font-weight: bold;
-    font-size: 40px;
+    font-size: 30px;
     color: #e2e0d8;
     border-radius: 5px;
     cursor: pointer;
     margin-top: 30px;
+}
+
+select:disabled {
+    background: rgba(186, 182, 167, 0.5);
 }
 
 img {
@@ -71,7 +79,7 @@ img {
     z-index: 100;
 }
 
-button:hover {
+button:not(:disabled):hover {
     background: #a6a294;
 }
 
