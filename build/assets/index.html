@@ -31,10 +31,17 @@
         <div id="gameContainer">
             <span>
                 <button id="add">Add</button>
+                <button id="move" disabled>Move</button>
                 <select id="spine-list"></select>
                 <select id="animation-list" disabled></select>
             </span>
-            <div id="count">0 Spine Objects</div>
+            <div>
+                <span class="counter">
+                    <label id="count">0 Spine Objects</label>
+                    <label> | </label>
+                    <label id="draw-calls">0 Draw Calls</label>
+                </span>
+            </div>
             <div id="gameDiv"></div>
         </div>
         <script>
