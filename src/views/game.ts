@@ -21,6 +21,7 @@ export class SpineMachine {
     private animationListMenu: HTMLSelectElement;
 
     private static SPINE_ADD_COUNT = 100;
+    private spinePreview?: Spine;
     private spineObjects: Spine[] = [];
     private spineList: SpineObject[] = [{
         name: "Diamond",
@@ -97,7 +98,7 @@ export class SpineMachine {
         });
 
         addEventListener('load', () => {
-            void this.loadSpineAnimations();
+            void this.loadSpinePreviewAndAnimations();
         })
 
         this.app?.view.addEventListener('wheel', (event) => {
@@ -134,7 +135,7 @@ export class SpineMachine {
             this.reset();
             this.selectedAnimIndex = 0;
             this.selectedSpineIndex = this.spineListMenu.selectedIndex;
-            void this.loadSpineAnimations();
+            void this.loadSpinePreviewAndAnimations();
         });
 
         this.animationListMenu = document.getElementById('animation-list') as HTMLSelectElement;
@@ -149,6 +150,8 @@ export class SpineMachine {
         this.moveButton.disabled = true;
         this.resetSpineObjects();
         this.resetObjectContainer();
+        this.disposeSpinePreview();
+
     }
     private resetSpineObjects(): void {
         this.spineObjects.forEach((spineObject) => {
@@ -289,10 +292,12 @@ export class SpineMachine {
 
     private updateCounter(): void {
         const count: HTMLElement = document.getElementById('count')!;
-        count.innerText = `${this.spineObjects.length} Spine Objects`;
+        const previewCount = this.spinePreview ? 1 : 0;
+        count.innerText = `${this.spineObjects.length + previewCount} Spine Objects`;
     }
 
     private addSpineObjects(): Promise<void> {
+        this.disposeSpinePreview();
         return this.loadSpineObject().then((data) => {
             for (let i = 0; i < SpineMachine.SPINE_ADD_COUNT; i++) {
                 this.createSpineObject(data.spineData); // Create a new Spine animation
@@ -301,9 +306,10 @@ export class SpineMachine {
         });
     }
 
-    private loadSpineAnimations(): Promise<void> {
+    private loadSpinePreviewAndAnimations(): Promise<void> {
         return this.loadSpineObject().then((data) => {
             this.createSpineObject(data.spineData, true); // Create a new Spine animation
+            this.updateCounter();
         });
     }
 
@@ -351,35 +357,48 @@ export class SpineMachine {
         })
     }
 
-    private createSpineObject(spineData: SkeletonData, getAnimationsOnly = false): void {
-        const spineObject = new Spine(spineData);
+    private createSpineObject(spineData: SkeletonData, previewOnly = false): void {
+        const spineAnimation = new Spine(spineData);
 
-        if (getAnimationsOnly) {
+        if (previewOnly) {
             // Set the animation to play
             this.animationList.splice(0);
-            spineObject.spineData.animations.forEach((animation) => {
+            spineAnimation.spineData.animations.forEach((animation) => {
                 this.animationList.push({
                     name: animation.name,
                 });
             });
             // Add the animation to the dropdown list
-            this.addItemsToList('animation-list', spineObject.spineData.animations);
-            spineObject.destroy();
+            this.addItemsToList('animation-list', spineAnimation.spineData.animations);
+        
+            // Set spine preview to center of the screen
+            const scale = 0.5;
+            spineAnimation.x = (this.app!.view.width * 0.5);
+            spineAnimation.y = (this.app!.view.height * 0.5);
+            spineAnimation.scale.set(scale);
+            this.spinePreview = spineAnimation;
+
+            // Start animation
+            this.startSpineAnimation(spineAnimation)
         } else {
             // Randomly position the spine animation within the given range
-            spineObject.x = 50 + Math.random() * 700; // Random x between 0 and 700
-            spineObject.y = 25 + Math.random() * 500; // Random y between 0 and 500
-            spineObject.scale.set(0.2);
+            spineAnimation.x = 50 + Math.random() * 700; // Random x between 0 and 700
+            spineAnimation.y = 25 + Math.random() * 500; // Random y between 0 and 500
+            spineAnimation.scale.set(0.2);
 
 
             // Start animation
-            if (this.animationList.length > 0) {
-                spineObject.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
-            }
+            this.startSpineAnimation(spineAnimation)
+            this.spineObjects.push(spineAnimation);
+        }
 
-            // Add the spine character to the stage
-            this.objectContainer.addChild(spineObject);
-            this.spineObjects.push(spineObject);
+        // Add the spine character to the stage
+        this.objectContainer.addChild(spineAnimation);
+    }
+
+    private startSpineAnimation(spine: Spine): void {
+        if (this.animationList.length > 0) {
+            spine.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
         }
     }
 
@@ -389,7 +408,10 @@ export class SpineMachine {
         });
     }
 
-
+    private disposeSpinePreview(): void {
+        this.spinePreview?.destroy();
+        this.spinePreview = undefined;
+    }
 
     private createLogo(): void {
         const logo = new PIXI.Sprite(PIXI.Texture.from('https://i.imgur.com/UjL9rZJ.png'));
