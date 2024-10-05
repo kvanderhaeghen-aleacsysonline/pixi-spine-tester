@@ -1,6 +1,6 @@
 {
     "name": "pixi-spine-tester",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "",
     "main": "index.js",
     "scripts": {
@@ -8,7 +8,8 @@
         "prod": "cross-env TS_NODE_PROJECT=build/tsconfig.node.json NODE_ENV=production  webpack --config build/webpack.prod.ts",
         "lint": "tsc --build build/tsconfig.all.json && eslint --config build/eslintrc.js 'src/**/*'",
         "format": "prettier --write --config build/prettierrc.json 'src/**/*' 'build/**/*'",
-        "copy:assets": "copyfiles -e 'dist/prod/hot' -u 2 'dist/prod/**/*' docs"
+        "copy:assets": "copyfiles -e 'dist/prod/hot' -u 2 'dist/prod/**/*' docs",
+        "deploy": "yarn prod && yarn copy:assets"
     },
     "author": "Kristof Van Der Haeghen",
     "license": "ISC",

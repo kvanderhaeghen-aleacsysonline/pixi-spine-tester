@@ -133,7 +133,6 @@ export class SpineMachine {
         this.spineListMenu = document.getElementById('spine-list') as HTMLSelectElement;
         this.spineListMenu?.addEventListener('change', () => {
             this.reset();
-            this.selectedAnimIndex = 0;
             this.selectedSpineIndex = this.spineListMenu.selectedIndex;
             void this.loadSpinePreviewAndAnimations();
         });
@@ -152,6 +151,8 @@ export class SpineMachine {
         this.resetObjectContainer();
         this.disposeSpinePreview();
 
+        this.selectedAnimIndex = 0;
+        this.animationListMenu.selectedIndex = 0;
     }
     private resetSpineObjects(): void {
         this.spineObjects.forEach((spineObject) => {
