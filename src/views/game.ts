@@ -403,9 +403,10 @@ export class SpineMachine {
     }
 
     private restartAnimations(): void {
-        this.spineObjects.forEach((spineObject) => {
+        this.spineObjects?.forEach((spineObject) => {
             spineObject.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
         });
+        this.spinePreview?.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
     }
 
     private disposeSpinePreview(): void {
