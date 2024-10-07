@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Path from 'path';
-import Webpack from 'webpack';
+import Webpack, { NormalModuleReplacementPlugin, ProvidePlugin } from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import { Config } from './webpack.utils';
 import HtmlWebpackPlugin from 'html-webpack-plugin';

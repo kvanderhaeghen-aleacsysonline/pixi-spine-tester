@@ -6,6 +6,7 @@ import { AtlasAttachmentLoader, SkeletonJson } from '@pixi-spine/runtime-4.1';
 import * as pixiSpine from 'pixi-spine';
 import * as newSpine from '@esotericsoftware/spine-pixi';
 import { SpineObject } from '../models/spineObject';
+import { DatabaseService } from '../utils/database/database';
 
 export class SpineMachine {
     private app?: PIXI.Application<HTMLCanvasElement>;
@@ -19,6 +20,8 @@ export class SpineMachine {
     private moveButton: HTMLButtonElement;
     private spineListMenu: HTMLSelectElement;
     private animationListMenu: HTMLSelectElement;
+    private removeButton: HTMLButtonElement;
+    private removeAllButton: HTMLButtonElement;
 
     private static SPINE_ADD_COUNT = 100;
     private spinePreview?: Spine;
@@ -47,6 +50,7 @@ export class SpineMachine {
     private realDrawElements: Function;
     private realWebGLClear: Function;
 
+    private readonly dataStorage = new DatabaseService();
     private readonly maxDropSize = 3;
     private readonly moveSpeed = 500;
 
@@ -60,8 +64,16 @@ export class SpineMachine {
         this.app?.stage?.addChild(this.objectContainer);
 
         this.initWebGLContext();
-        this.initElements();
         this.initDropZone();
+        this.initElements();
+    }
+
+    public init(): void {
+        this.createLogo();
+        this.dataStorage.init();
+        this.getItemsFromDatabase().then(() => {
+            this.initRemoveButtons();
+        });
     }
 
     private initWebGLContext(): void {
@@ -135,6 +147,11 @@ export class SpineMachine {
             this.reset();
             this.selectedSpineIndex = this.spineListMenu.selectedIndex;
             void this.loadSpinePreviewAndAnimations();
+            if(this.spineList[this.spineListMenu.selectedIndex].isBase64) {
+                this.removeButton.disabled = false;
+            } else {
+                this.removeButton.disabled = true;
+            }
         });
 
         this.animationListMenu = document.getElementById('animation-list') as HTMLSelectElement;
@@ -143,6 +160,20 @@ export class SpineMachine {
             this.restartAnimations();
         });
 
+    }
+
+    private initRemoveButtons(): void {
+        this.removeButton = document.getElementById('remove') as HTMLButtonElement;
+        this.removeButton?.addEventListener('click', async () => {
+            await this.dataStorage.removeItem(this.spineList[this.selectedSpineIndex].name);
+            location.reload();
+            
+        });
+        this.removeAllButton = document.getElementById('remove-all') as HTMLButtonElement;
+        this.removeAllButton?.addEventListener('click', async () => {
+            await this.dataStorage.removeAll();
+            location.reload();
+        });
     }
 
     private reset(): void {
@@ -233,6 +264,11 @@ export class SpineMachine {
                 
                 this.spineList.push(spineObject);
                 this.addItemsToList('spine-list', this.spineList);
+                void this.dataStorage.addItem(spineObject.name, {
+                    atlas: spineObject.atlasPath ?? '',
+                    animation: spineObject.jsonPath ?? '',
+                    image: spineObject.texturePath ?? '',
+                });
                 console.log('Spine object added:', spineObject);
             }
     }
@@ -273,10 +309,6 @@ export class SpineMachine {
         return resolvePromise.promise;
     }
 
-    public init(): void {
-        this.createLogo();
-    }
-
     private dragHandler(hasEntered: boolean): void {
         // Get the drop zone
         const dropZone = document.getElementById('drop-zone');
@@ -289,6 +321,16 @@ export class SpineMachine {
         if (this.app) {
             this.app.view.style.display = hasEntered ?  'none' : 'inline';
         }
+    }
+
+    private getItemsFromDatabase(): Promise<void> {
+        return this.dataStorage.getItems().then((dataArray) => {
+            const length = dataArray.length;
+            for (let i = 0; i < length; i++) {
+                this.spineList.push(dataArray[i]);
+            }
+            this.addItemsToList('spine-list', this.spineList);
+        });
     }
 
     private updateCounter(): void {
