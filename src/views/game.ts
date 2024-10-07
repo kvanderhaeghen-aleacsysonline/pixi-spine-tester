@@ -7,6 +7,7 @@ import * as pixiSpine from 'pixi-spine';
 import * as newSpine from '@esotericsoftware/spine-pixi';
 import { SpineObject } from '../models/spineObject';
 import { DatabaseService } from '../utils/database/database';
+import { v4 as uuidv4 } from 'uuid';
 
 export class SpineMachine {
     private app?: PIXI.Application<HTMLCanvasElement>;
@@ -28,18 +29,20 @@ export class SpineMachine {
     private spineObjects: Spine[] = [];
     private spineList: SpineObject[] = [{
         name: "Diamond",
+        id: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
         isBase64: false,
         atlasPath: "assets/diamond.atlas",
         jsonPath: "assets/diamond.json",
         texturePath: "assets/diamond.tex1.png"
     }, {
         name: "Theseus",
+        id: "4a1d5e7f-3256-481d-8f3d-9b1c2d3e4f5g",
         isBase64: false,
         atlasPath: "assets/theseus.atlas",
         jsonPath: "assets/theseus.json",
         texturePath: "assets/theseus.tex1.png"
     }];
-    private animationList: SpineObject[] = [];
+    private animationList: { name: string }[] = [];
 
     private selectedSpineIndex: number = 0;
     private selectedAnimIndex: number = 0;
@@ -64,8 +67,10 @@ export class SpineMachine {
         this.app?.stage?.addChild(this.objectContainer);
 
         this.initWebGLContext();
-        this.initDropZone();
-        this.initElements();
+        this.initDropZoneEvents();
+        this.initElementsAndEvents();
+        this.addMouseEvents();
+        this.addTouchEvents();
     }
 
     public init(): void {
@@ -94,7 +99,7 @@ export class SpineMachine {
         this.webglContext = gl;
     }
 
-    private initElements(): void {
+    private initElementsAndEvents(): void {
         this.addItemsToList('spine-list', this.spineList);
 
         this.addButton = document.getElementById('add') as HTMLButtonElement;
@@ -113,35 +118,6 @@ export class SpineMachine {
             void this.loadSpinePreviewAndAnimations();
         })
 
-        this.app?.view.addEventListener('wheel', (event) => {
-            const scale = 1 - (event.deltaY * 0.001);
-            const screenCenterX = (this.app!.view.width * 0.5);
-            const screenCenterY = (this.app!.view.height * 0.5);
-            this.objectContainer.position.x = this.objectContainer.position.x + (screenCenterX - this.objectContainer.position.x) * (1 - scale);
-            this.objectContainer.position.y = this.objectContainer.position.y + (screenCenterY - this.objectContainer.position.y) * (1 - scale);
-            this.objectContainer.scale.x *= scale;
-            this.objectContainer.scale.y *= scale;
-        });
-
-        
-        this.app?.view.addEventListener('touchstart', (event) => {
-            this.pinchCenter = { x: event.touches[0].clientX, y: event.touches[0].clientY };
-            this.pinchDistance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY);
-        });
-
-        this.app?.view.addEventListener('touchmove', (event) => {
-            const distance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY);
-            const scale = distance / this.pinchDistance;
-            const screenCenterX = (this.app!.view.width * 0.5);
-            const screenCenterY = (this.app!.view.height * 0.5);
-            this.objectContainer.position.x = this.pinchCenter.x + (screenCenterX - this.pinchCenter.x) * scale;
-            this.objectContainer.position.y = this.pinchCenter.y + (screenCenterY - this.pinchCenter.y) * scale;
-            this.objectContainer.scale.x *= scale;
-            this.objectContainer.scale.y *= scale;
-            this.pinchDistance = distance;
-        });
-
-
         this.spineListMenu = document.getElementById('spine-list') as HTMLSelectElement;
         this.spineListMenu?.addEventListener('change', () => {
             this.reset();
@@ -158,14 +134,81 @@ export class SpineMachine {
         this.animationListMenu?.addEventListener('change', () => {
             this.selectedAnimIndex = this.animationListMenu.selectedIndex;
             this.restartAnimations();
+        }); 
+    }
+
+    private addMouseEvents(): void {
+        this.app?.view.addEventListener('wheel', (event) => {
+            const scale = 1 - (event.deltaY * 0.001);
+            const screenCenterX = (this.app!.view.width * 0.5);
+            const screenCenterY = (this.app!.view.height * 0.5);
+            this.objectContainer.position.x = this.objectContainer.position.x + (screenCenterX - this.objectContainer.position.x) * (1 - scale);
+            this.objectContainer.position.y = this.objectContainer.position.y + (screenCenterY - this.objectContainer.position.y) * (1 - scale);
+            this.objectContainer.scale.x *= scale;
+            this.objectContainer.scale.y *= scale;
         });
 
+        let dragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        this.app?.view.addEventListener('mousedown', (event) => {
+            dragging = true;
+            dragStartX = event.clientX;
+            dragStartY = event.clientY;
+        });
+        this.app?.view.addEventListener('mousemove', (event) => {
+            if(dragging) {
+                const deltaX = event.clientX - dragStartX;
+                const deltaY = event.clientY - dragStartY;
+                this.objectContainer.position.x += deltaX;
+                this.objectContainer.position.y += deltaY;
+                dragStartX = event.clientX;
+                dragStartY = event.clientY;
+            }
+        });
+        this.app?.view.addEventListener('mouseup', () => {
+            dragging = false;
+        });
+    }
+
+    private addTouchEvents(): void {
+        let oneFinger = false;
+        let pinchDistance = 0;
+        let pinchCenter = { x: 0, y: 0 };
+        this.app?.view.addEventListener('touchstart', (event) => {
+            if(event.touches.length === 1) {
+                oneFinger = true;
+                pinchCenter = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+            } else {
+                oneFinger = false;
+                pinchDistance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY);
+                pinchCenter = { x: (event.touches[0].clientX + event.touches[1].clientX) / 2, y: (event.touches[0].clientY + event.touches[1].clientY) / 2 };
+            }
+        });
+
+        this.app?.view.addEventListener('touchmove', (event) => {
+            if(oneFinger) {
+                this.objectContainer.position.x += event.touches[0].clientX - pinchCenter.x;
+                this.objectContainer.position.y += event.touches[0].clientY - pinchCenter.y;
+                pinchCenter = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+            } else {
+                const distance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY);
+                const scale = distance / pinchDistance;
+                const screenCenterX = (this.app!.view.width * 0.5);
+                const screenCenterY = (this.app!.view.height * 0.5);
+                this.objectContainer.position.x = pinchCenter.x + (screenCenterX - pinchCenter.x) * scale;
+                this.objectContainer.position.y = pinchCenter.y + (screenCenterY - pinchCenter.y) * scale;
+                this.objectContainer.scale.x *= scale;
+                this.objectContainer.scale.y *= scale;
+                pinchDistance = distance;
+            }
+        });
     }
 
     private initRemoveButtons(): void {
         this.removeButton = document.getElementById('remove') as HTMLButtonElement;
         this.removeButton?.addEventListener('click', async () => {
-            await this.dataStorage.removeItem(this.spineList[this.selectedSpineIndex].name);
+            await this.dataStorage.removeItem(this.spineList[this.selectedSpineIndex].id);
             location.reload();
             
         });
@@ -175,7 +218,7 @@ export class SpineMachine {
             location.reload();
         });
     }
-
+    
     private reset(): void {
         this.moveButton.disabled = true;
         this.resetSpineObjects();
@@ -199,7 +242,7 @@ export class SpineMachine {
         this.objectContainer.scale.y = 1;
     }
 
-    private addItemsToList(elementId: string, items: SpineObject[]): void {
+    private addItemsToList(elementId: string, items: any[]): void {
         const spineListSelect = document.getElementById(elementId) as HTMLSelectElement;
         while (spineListSelect.firstChild) {
             spineListSelect.removeChild(spineListSelect.firstChild);
@@ -213,7 +256,7 @@ export class SpineMachine {
         });
     }
 
-    private initDropZone(): void {
+    private initDropZoneEvents(): void {
         const imagePreview = document.getElementById('image-preview') as HTMLImageElement;
         imagePreview.src = 'assets/drop.png';
         imagePreview.style.display = 'none';
@@ -251,6 +294,7 @@ export class SpineMachine {
             if (files) {
                 // Init spine object
                 const spineObject: SpineObject = {
+                    id: uuidv4(),
                     name: '',
                     isBase64: true,
                     atlasPath: '',
@@ -264,7 +308,8 @@ export class SpineMachine {
                 
                 this.spineList.push(spineObject);
                 this.addItemsToList('spine-list', this.spineList);
-                void this.dataStorage.addItem(spineObject.name, {
+                void this.dataStorage.addItem(spineObject.id, {
+                    name: spineObject.name,
                     atlas: spineObject.atlasPath ?? '',
                     animation: spineObject.jsonPath ?? '',
                     image: spineObject.texturePath ?? '',
@@ -317,6 +362,11 @@ export class SpineMachine {
         // Show/Hide the image preview items are dropped
         const imagePreview = document.getElementById('image-preview') as HTMLImageElement;
         imagePreview.style.display = hasEntered ?  'block' : 'none';
+
+        // Show/Hide buttons
+        this.removeButton.style.display = hasEntered ? 'none' : 'inline-block';
+        this.removeAllButton.style.display = hasEntered ? 'none' : 'inline-block';
+
         // Show/Hide pixi app
         if (this.app) {
             this.app.view.style.display = hasEntered ?  'none' : 'inline';

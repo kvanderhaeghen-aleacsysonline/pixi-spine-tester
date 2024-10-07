@@ -3,6 +3,7 @@ import { SpineObject } from "../../models/spineObject";
 import localforage from 'localforage'
 
 export interface StorageData {
+    name: string;
     atlas: string;
     animation: string;
     image: string;
@@ -17,8 +18,8 @@ export class DatabaseService {
         });
     }
 
-    public async addItem(name: string, data: StorageData): Promise<void> {
-        this.indexedDB?.setItem<StorageData>(name, data);
+    public async addItem(id: string, data: StorageData): Promise<void> {
+        this.indexedDB?.setItem<StorageData>(id, data);
     }
 
     public async getItems(): Promise<SpineObject[]> {
@@ -33,12 +34,13 @@ export class DatabaseService {
         return items;
     }
 
-    public async getItem(name: string): Promise<SpineObject> {
-        const item = await this.indexedDB?.getItem<StorageData>(name).catch(function (err) {
+    public async getItem(id: string): Promise<SpineObject> {
+        const item = await this.indexedDB?.getItem<StorageData>(id).catch(function (err) {
             console.log("Error getting item:", err);
         });
         return {
-            name: name,
+            name: item?.name ?? '',
+            id: id,
             isBase64: true,
             atlasPath: item?.atlas,
             jsonPath: item?.animation,
@@ -51,9 +53,9 @@ export class DatabaseService {
         console.log("All items removed.");
     }
 
-    public async removeItem(name: string) {
-        this.indexedDB?.removeItem(name)
-        console.log("Item '" + name + "' removed.");
+    public async removeItem(id: string) {
+        this.indexedDB?.removeItem(id)
+        console.log("Item '" + id + "' removed.");
     }
 }
 

@@ -25,6 +25,7 @@
         "@types/terser-webpack-plugin": "^5.2.0",
         "@types/uglify-js": "^3.13.0",
         "@types/uglifyjs-webpack-plugin": "^1.1.1",
+        "@types/uuid": "^10",
         "@types/webpack-dev-server": "^4.7.2",
         "@types/webpack-merge": "^5.0.0",
         "@typescript-eslint/eslint-plugin": "^2.27.0",
@@ -88,6 +89,7 @@
         "spine-ts": "^1.0.0",
         "stats.js": "^0.17.0",
         "three": "^0.148.0",
+        "uuid": "^10.0.0",
         "zstddec": "^0.0.2"
     },
     "resolutions": {
