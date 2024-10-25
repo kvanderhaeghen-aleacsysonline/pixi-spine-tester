@@ -71,6 +71,9 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
             ],
         }),
         new nodePolyfillPlugin(),
+        new Webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1
+        }),
     ],
     output: {
         filename: Config.outFileName,
@@ -78,8 +81,6 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
         libraryTarget: 'umd',
         libraryExport: 'default',
         library: Config.outputName,
-        hotUpdateChunkFilename: 'hot/hot-update.js',
-        hotUpdateMainFilename: 'hot/hot-update.json',
     },
     resolve: {
         mainFields: ['module', 'main'],

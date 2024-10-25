@@ -59,6 +59,9 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
             ],
         }),
         new nodePolyfillPlugin(),
+        new Webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1
+        }),
     ],
     output: {
         filename: Config.outFileName,
