@@ -18,6 +18,7 @@ export class SpineMachine {
     private moveButton: HTMLButtonElement;
     private spineListMenu: HTMLSelectElement;
     private animationListMenu: HTMLSelectElement;
+    private skinListMenu: HTMLSelectElement;
     private removeButton: HTMLButtonElement;
     private removeAllButton: HTMLButtonElement;
 
@@ -47,9 +48,11 @@ export class SpineMachine {
         texturePath: "assets/wild.tex.png"
     }];
     private animationList: { name: string }[] = [];
+    private skinList: { name: string }[] = [];
 
     private selectedSpineIndex: number = 0;
     private selectedAnimIndex: number = 0;
+    private selectedSkinIndex: number = 0;
     private canMove: boolean = false;
 
     private webglContext: WebGLRenderingContext | WebGL2RenderingContext | null | undefined;
@@ -101,6 +104,8 @@ export class SpineMachine {
         if (!gl) {
              gl =  this.app?.canvas.getContext('webgl2');
         }
+            // @ts-ignore
+        console.error(gl.__proto__.drawElements);
         if (gl) {
             // @ts-ignore
             this.realDrawElements = gl.__proto__.drawElements;
@@ -149,6 +154,13 @@ export class SpineMachine {
         this.animationListMenu?.addEventListener('change', () => {
             this.selectedAnimIndex = this.animationListMenu.selectedIndex;
             this.restartAnimations();
+        }); 
+
+        this.skinListMenu = document.getElementById('skin-list') as HTMLSelectElement;
+        this.skinListMenu?.addEventListener('change', () => {
+            this.selectedSkinIndex = this.skinListMenu.selectedIndex;
+            this.restartAnimations();
+            this.setSkin();
         }); 
     }
 
@@ -242,6 +254,8 @@ export class SpineMachine {
 
         this.selectedAnimIndex = 0;
         this.animationListMenu.selectedIndex = 0;
+        this.selectedSkinIndex = 0;
+        this.skinListMenu.selectedIndex = 0;
     }
     private resetSpineObjects(): void {
         this.spineObjects.forEach((spineObject) => {
@@ -531,6 +545,16 @@ export class SpineMachine {
             });
             // Add the animation to the dropdown list
             this.addItemsToList('animation-list', spineData.animations);
+
+            // Set the skin
+            this.skinList.splice(0);
+            spineData.skins.forEach((skin) => {
+                this.skinList.push({
+                    name: skin.name,
+                });
+            });
+            // Add the skin to the dropdown list
+            this.addItemsToList('skin-list', spineData.skins);
         
             // Set spine preview to center of the screen
             const scale = 0.5;
@@ -538,20 +562,17 @@ export class SpineMachine {
             spineAnimation.y = (this.app!.view.height * 0.5);
             spineAnimation.scale.set(scale);
             this.spinePreview = spineAnimation;
-
-            // Start animation
-            this.startSpineAnimation(spineAnimation)
         } else {
             // Randomly position the spine animation within the given range
             spineAnimation.x = 50 + Math.random() * 700; // Random x between 0 and 700
             spineAnimation.y = 25 + Math.random() * 500; // Random y between 0 and 500
             spineAnimation.scale.set(0.2);
-
-
-            // Start animation
-            this.startSpineAnimation(spineAnimation)
             this.spineObjects.push(spineAnimation);
         }
+
+        // Start animation
+        this.startSpineAnimation(spineAnimation)
+        this.startSpineSkin(spineAnimation);
 
         // Add the spine character to the stage
         this.objectContainer.addChild(spineAnimation);
@@ -562,12 +583,30 @@ export class SpineMachine {
             spine.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
         }
     }
+    private startSpineSkin(spine: PixiSpine.Spine): void {
+        if (this.skinList.length > 1) {
+            this.selectedSkinIndex = 1;
+            this.skinListMenu.selectedIndex = this.selectedSkinIndex;
+        }
+        if (this.skinList.length > 0) {
+            spine.skeleton.setSkinByName(this.skinList[this.selectedSkinIndex].name);
+        }
+    }
+
 
     private restartAnimations(): void {
+        const animName = this.animationList[this.selectedAnimIndex].name;
         this.spineObjects?.forEach((spineObject) => {
-            spineObject.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
+            spineObject.state.setAnimation(0, animName, true);
         });
-        this.spinePreview?.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
+        this.spinePreview?.state.setAnimation(0, animName, true);
+    }
+    private setSkin(): void {
+        const skinName = this.skinList[this.selectedSkinIndex].name;
+        this.spineObjects?.forEach((spineObject) => {
+            spineObject.skeleton.setSkinByName(skinName);
+        });
+        this.spinePreview?.skeleton.setSkinByName(skinName);
     }
 
     private disposeSpinePreview(): void {
@@ -619,11 +658,10 @@ export class SpineMachine {
         this.realDrawElements.call(this.webglContext, mode, count, type, offset);
     }
     private fakeWebGLClear(bitmask: number): void {
-        if (bitmask == 16640) {
+        if (bitmask == 17664) {
             this.updateDrawCalls(this.webglDrawCalls);
             this.webglDrawCalls = 0;
         }
-
         this.realWebGLClear.call(this.webglContext, bitmask);
     }
 }

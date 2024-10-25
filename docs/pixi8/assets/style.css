@@ -20,10 +20,10 @@ body {
     text-align: center;
 }
 
-.counter {
+label {
     font-family: 'Lucida Grande', Arial;
     font-weight: bold;
-    font-size: 30px;
+    font-size: 24px;
     color: #bab6a7;
 }
 
@@ -37,15 +37,15 @@ button {
     background: #bab6a7;
     border: none;
     outline: 0;
-    padding: 15px 38px;
+    padding: 10px 25px;
     margin: 0;
     font-family: 'Lucida Grande', Arial;
     font-weight: bold;
-    font-size: 30px;
+    font-size: 20px;
     color: #e2e0d8;
     border-radius: 5px;
     cursor: pointer;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 button:disabled {
@@ -56,15 +56,15 @@ select {
     background: #bab6a7;
     border: none;
     outline: 0;
-    padding: 15px 38px;
+    padding: 10px 25px;
     margin: 0;
     font-family: 'Lucida Grande', Arial;
     font-weight: bold;
-    font-size: 30px;
+    font-size: 20px;
     color: #e2e0d8;
     border-radius: 5px;
     cursor: pointer;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 select:disabled {
