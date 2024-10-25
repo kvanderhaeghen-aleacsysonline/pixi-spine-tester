@@ -97,9 +97,9 @@ export class SpineMachine {
     }
 
     private initWebGLContext(): void {
-        let gl = this.app?.view.getContext('webgl');
+        let gl = this.app?.canvas.getContext('webgl');
         if (!gl) {
-             gl =  this.app?.view.getContext('webgl2');
+             gl =  this.app?.canvas.getContext('webgl2');
         }
         if (gl) {
             // @ts-ignore
@@ -153,7 +153,7 @@ export class SpineMachine {
     }
 
     private addMouseEvents(): void {
-        this.app?.view.addEventListener('wheel', (event) => {
+        this.app?.canvas.addEventListener('wheel', (event) => {
             const scale = 1 - (event.deltaY * 0.001);
             const screenCenterX = (this.app!.view.width * 0.5);
             const screenCenterY = (this.app!.view.height * 0.5);
@@ -166,12 +166,12 @@ export class SpineMachine {
         let dragging = false;
         let dragStartX = 0;
         let dragStartY = 0;
-        this.app?.view.addEventListener('mousedown', (event) => {
+        this.app?.canvas.addEventListener('mousedown', (event) => {
             dragging = true;
             dragStartX = event.clientX;
             dragStartY = event.clientY;
         });
-        this.app?.view.addEventListener('mousemove', (event) => {
+        this.app?.canvas.addEventListener('mousemove', (event) => {
             if(dragging) {
                 const deltaX = event.clientX - dragStartX;
                 const deltaY = event.clientY - dragStartY;
@@ -181,7 +181,7 @@ export class SpineMachine {
                 dragStartY = event.clientY;
             }
         });
-        this.app?.view.addEventListener('mouseup', () => {
+        this.app?.canvas.addEventListener('mouseup', () => {
             dragging = false;
         });
     }
@@ -190,7 +190,7 @@ export class SpineMachine {
         let oneFinger = false;
         let pinchDistance = 0;
         let pinchCenter = { x: 0, y: 0 };
-        this.app?.view.addEventListener('touchstart', (event) => {
+        this.app?.canvas.addEventListener('touchstart', (event) => {
             if(event.touches.length === 1) {
                 oneFinger = true;
                 pinchCenter = { x: event.touches[0].clientX, y: event.touches[0].clientY };
@@ -201,7 +201,7 @@ export class SpineMachine {
             }
         });
 
-        this.app?.view.addEventListener('touchmove', (event) => {
+        this.app?.canvas.addEventListener('touchmove', (event) => {
             if(oneFinger) {
                 this.objectContainer.position.x += event.touches[0].clientX - pinchCenter.x;
                 this.objectContainer.position.y += event.touches[0].clientY - pinchCenter.y;
