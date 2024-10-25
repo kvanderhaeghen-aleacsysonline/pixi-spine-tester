@@ -44,13 +44,14 @@
             </div>
             <div id="gameDiv"></div>
         </div>
-        <script>
-            PixiSpineTest.launch();
-        </script>
-        <br />
         <span>
             <button id="remove" disabled>Remove Current</button>
             <button id="remove-all">Remove All</button>
         </span>
+        </br>
+        <script>
+            if (!window.location.search.includes('renderer=')) window.location.search += '?renderer=webgl';
+            PixiSpineTest.launch();
+        </script>
     </body>
 </html>

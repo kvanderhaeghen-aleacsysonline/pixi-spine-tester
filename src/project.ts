@@ -5,9 +5,9 @@ export interface IProject {
 }
 
 export class Project implements IProject {
-    public launch(): void {
+    public async launch(): Promise<void> {
         const slotMachine: SpineMachine = new SpineMachine();
-        slotMachine.init();
+        await slotMachine.init();
         slotMachine.update();
     }
 }

@@ -1,19 +1,16 @@
 import _ from 'lodash';
-import * as PIXI from 'pixi.js';
+import * as Pixi from 'pixi.js';
 import { createTickEventHandler, ITickEventHandler, ResolvablePromise } from "@gp/utils";
-import { SkeletonData, Spine } from '@pixi-spine/all-4.1';
-import { AtlasAttachmentLoader, SkeletonJson } from '@pixi-spine/runtime-4.1';
-import * as pixiSpine from 'pixi-spine';
-import * as newSpine from '@esotericsoftware/spine-pixi';
+import * as PixiSpine from '@pixi/spine-pixi';
 import { SpineObject } from '../models/spineObject';
 import { DatabaseService } from '../utils/database/database';
 import { v4 as uuidv4 } from 'uuid';
 
 export class SpineMachine {
-    private app?: PIXI.Application<HTMLCanvasElement>;
+    private app?: Pixi.Application;
     private tickEventHandler: ITickEventHandler = createTickEventHandler();
 
-    private objectContainer: PIXI.Container = new PIXI.Container();
+    private objectContainer: Pixi.Container = new Pixi.Container();
     private pinchCenter: { x: number, y: number } = { x: 0, y: 0 };
     private pinchDistance: number = 0;
 
@@ -25,8 +22,8 @@ export class SpineMachine {
     private removeAllButton: HTMLButtonElement;
 
     private static SPINE_ADD_COUNT = 100;
-    private spinePreview?: Spine;
-    private spineObjects: Spine[] = [];
+    private spinePreview?: PixiSpine.Spine;
+    private spineObjects: PixiSpine.Spine[] = [];
     private spineList: SpineObject[] = [{
         name: "Diamond",
         id: "1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed",
@@ -41,6 +38,13 @@ export class SpineMachine {
         atlasPath: "assets/theseus.atlas",
         jsonPath: "assets/theseus.json",
         texturePath: "assets/theseus.tex1.png"
+    }, {
+        name: "Wild",
+        id: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        isBase64: false,
+        atlasPath: "assets/wild.atlas.txt",
+        skeletonPath: "assets/wild.skel",
+        texturePath: "assets/wild.tex.png"
     }];
     private animationList: { name: string }[] = [];
 
@@ -57,13 +61,26 @@ export class SpineMachine {
     private readonly maxDropSize = 3;
     private readonly moveSpeed = 500;
 
-    constructor() {
-        this.app = new PIXI.Application<HTMLCanvasElement>({ 
-            background: '#1099bb', 
+    constructor () {
+        this.app = new Pixi.Application();
+    }
+
+    public async init(): Promise<void> {
+        const params = new URLSearchParams(window.location.search);
+        const prefParam = (params.get("renderer") as "webgl" | "webgpu") ?? "webgl";
+        
+        await this.app?.init({
+            background: "#1099bb",
+            powerPreference: "high-performance",
             width: 800,
-            height: 600, 
+            height: 600,
+            preference: prefParam,
+            resolution: 1,
+            antialias: false,
+            hello: true,
+            clearBeforeRender: true,
         });
-        document.body.appendChild(this.app.view);
+        document.body.appendChild(this.app!.canvas);
         this.app?.stage?.addChild(this.objectContainer);
 
         this.initWebGLContext();
@@ -71,9 +88,7 @@ export class SpineMachine {
         this.initElementsAndEvents();
         this.addMouseEvents();
         this.addTouchEvents();
-    }
 
-    public init(): void {
         this.createLogo();
         this.dataStorage.init();
         this.getItemsFromDatabase().then(() => {
@@ -298,7 +313,8 @@ export class SpineMachine {
                     name: '',
                     isBase64: true,
                     atlasPath: '',
-                    jsonPath: '',
+                    jsonPath: undefined,
+                    skeletonPath: undefined,
                     texturePath: '',
                 };
                 // Loop through the files
@@ -311,7 +327,8 @@ export class SpineMachine {
                 void this.dataStorage.addItem(spineObject.id, {
                     name: spineObject.name,
                     atlas: spineObject.atlasPath ?? '',
-                    animation: spineObject.jsonPath ?? '',
+                    animation: spineObject.jsonPath,
+                    skeleton: spineObject.skeletonPath,
                     image: spineObject.texturePath ?? '',
                 });
                 console.log('Spine object added:', spineObject);
@@ -323,7 +340,7 @@ export class SpineMachine {
         const resolvePromise = new ResolvablePromise<void>();
 
         // Check the file type
-        if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.name.endsWith('.atlas') || file.name.endsWith('.atlas.txt') || file.name.endsWith('.json')) {
+        if (this.isCorrectFileTyp(file)) {
             // Create file reader
             const reader = new FileReader();
             // Read the file as url
@@ -338,6 +355,8 @@ export class SpineMachine {
                     spineObject.atlasPath = fileContents as string;
                 } else if (file.name.endsWith('.json')) {
                     spineObject.jsonPath = fileContents as string;
+                } else if (file.name.endsWith('.skel')) {
+                    spineObject.skeletonPath = fileContents as string;
                 } else if (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg') {
                     spineObject.texturePath = fileContents as string;
                 } else {
@@ -352,6 +371,10 @@ export class SpineMachine {
             resolvePromise.resolve();
         }
         return resolvePromise.promise;
+    }
+
+    private isCorrectFileTyp(file: File): boolean {
+        return file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg' || file.name.endsWith('.atlas') || file.name.endsWith('.atlas.txt') || file.name.endsWith('.json') || file.name.endsWith('.skel');
     }
 
     private dragHandler(hasEntered: boolean): void {
@@ -411,58 +434,103 @@ export class SpineMachine {
             const spineObject = this.spineList[this.selectedSpineIndex];
             if (spineObject.isBase64) {
                 try {
-                    const texture = PIXI.BaseTexture.from(spineObject.texturePath!);
-
                     // Decode base64 string to string
                     const atlasEncoded = spineObject.atlasPath?.split(",")[1] ?? '';
                     const atlasString = atob(atlasEncoded ?? '');
-                    const spineAtlas = new pixiSpine.TextureAtlas(atlasString, (atlasName, textureLoader) => {
-                        const atlasId = atlasName.split('.')[1];
-                        textureLoader(texture);
-                    });
-                    const skeletonParser = new SkeletonJson(new AtlasAttachmentLoader(spineAtlas));
+                    const textureAtlas: PixiSpine.TextureAtlas = new PixiSpine.TextureAtlas(
+                        atlasString,
+                    );
+                    let skeletonParser: PixiSpine.SkeletonJson | PixiSpine.SkeletonBinary;
 
                     // Decode base64 string to string
-                    const animationEncoded = spineObject.jsonPath?.split(",")[1] ?? '';
-                    const animationString = atob(animationEncoded ?? '');
-                    // Parse string as JSON data
-                    const jsonData = JSON.parse(animationString);
-                    resolve({ spineData: skeletonParser.readSkeletonData(jsonData) as pixiSpine.ISkeletonData });
+                    let spineData: PixiSpine.SkeletonData;
+                    if (spineObject.skeletonPath) {
+                        const skeletonEncoded = spineObject.skeletonPath?.split(",")[1] ?? '';
+                        const skeletonBinary = atob(skeletonEncoded);
+                        const skeletonData = new Uint8Array(skeletonBinary.length);
+                        for (let i = 0; i < skeletonBinary.length; i++) {
+                            skeletonData[i] = skeletonBinary.charCodeAt(i);
+                        }
+
+                        skeletonParser = new PixiSpine.SkeletonBinary(
+                            new PixiSpine.AtlasAttachmentLoader(textureAtlas),
+                        );
+                        spineData = skeletonParser.readSkeletonData(skeletonData);
+                    } else {
+                        const animationEncoded = spineObject.jsonPath?.split(",")[1] ?? '';
+                        const animationString = atob(animationEncoded ?? '');
+                        const jsonData = JSON.parse(animationString);
+
+                        skeletonParser = new PixiSpine.SkeletonJson(
+                            new PixiSpine.AtlasAttachmentLoader(textureAtlas),
+                        );
+                        spineData = skeletonParser.readSkeletonData(jsonData);
+                    }
+              
+                    if (textureAtlas) {
+                        const texture = await Pixi.Assets.load<Pixi.Texture>(spineObject.texturePath!);
+                        for (const page of textureAtlas?.pages ?? []) {
+                            page.setTexture(PixiSpine.SpineTexture.from(texture.source));
+                        }
+                    }
+                    resolve({ spineData: spineData });
                 } catch (error) {
                     console.error('Error loading assets:', error);
                     reject(error);
                 }
             } else {
-                PIXI.Assets.load(spineObject.jsonPath!).then((data) => {
-                    if (!data) {
-                        console.error('Failed to load spine object.');
-                        reject(data);
-                        return;
+                try {
+                    const atlas =
+                        (await (
+                        await fetch(spineObject.atlasPath!)
+                        ).text()) ?? "";
+                    const animation = spineObject.skeletonPath ?
+                        new Uint8Array((await (
+                            await fetch(spineObject.skeletonPath!)
+                            ).arrayBuffer()))
+                        ?? "" : 
+                        (await (
+                        await fetch(spineObject.jsonPath!)
+                        ).json()) ?? "";
+
+                    const textureAtlas: PixiSpine.TextureAtlas = new PixiSpine.TextureAtlas(
+                        atlas,
+                    );
+                    const skeletonParser = spineObject.skeletonPath ? new PixiSpine.SkeletonBinary(
+                        new PixiSpine.AtlasAttachmentLoader(textureAtlas),
+                    ) : new PixiSpine.SkeletonJson(
+                        new PixiSpine.AtlasAttachmentLoader(textureAtlas),
+                    );
+                    const spineData = skeletonParser.readSkeletonData(animation);
+
+                    if (textureAtlas) {
+                        const texture = await Pixi.Assets.load<Pixi.Texture>(spineObject.texturePath!);
+                        for (const page of textureAtlas?.pages ?? []) {
+                            page.setTexture(PixiSpine.SpineTexture.from(texture.source));
+                        }
                     }
-                    resolve(data);
-                }).catch((error) => {
+                    resolve({ spineData: spineData });
+                } catch(error) {
                     console.error('Error loading assets:', error);
                     reject(error);
-                });
+                };
             }
-            
-            
-        })
+        });
     }
 
-    private createSpineObject(spineData: SkeletonData, previewOnly = false): void {
-        const spineAnimation = new Spine(spineData);
+    private createSpineObject(spineData: PixiSpine.SkeletonData, previewOnly = false): void {
+        const spineAnimation = new PixiSpine.Spine(spineData);
 
         if (previewOnly) {
             // Set the animation to play
             this.animationList.splice(0);
-            spineAnimation.spineData.animations.forEach((animation) => {
+            spineData.animations.forEach((animation) => {
                 this.animationList.push({
                     name: animation.name,
                 });
             });
             // Add the animation to the dropdown list
-            this.addItemsToList('animation-list', spineAnimation.spineData.animations);
+            this.addItemsToList('animation-list', spineData.animations);
         
             // Set spine preview to center of the screen
             const scale = 0.5;
@@ -489,7 +557,7 @@ export class SpineMachine {
         this.objectContainer.addChild(spineAnimation);
     }
 
-    private startSpineAnimation(spine: Spine): void {
+    private startSpineAnimation(spine: PixiSpine.Spine): void {
         if (this.animationList.length > 0) {
             spine.state.setAnimation(0, this.animationList[this.selectedAnimIndex].name, true);
         }
@@ -508,7 +576,7 @@ export class SpineMachine {
     }
 
     private createLogo(): void {
-        const logo = new PIXI.Sprite(PIXI.Texture.from('https://i.imgur.com/UjL9rZJ.png'));
+        const logo = new Pixi.Sprite(Pixi.Texture.from('https://i.imgur.com/UjL9rZJ.png'));
         logo.scale.set(0.5);
         logo.anchor.set(0.5);
         logo.x = 400;

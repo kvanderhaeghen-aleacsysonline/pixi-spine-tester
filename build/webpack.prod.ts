@@ -83,7 +83,7 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
     },
     resolve: {
         mainFields: ['module', 'main'],
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.json', '.d.ts'],
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.json', '.d.ts', '.txt', '.skel'],
     },
     optimization: {
         minimize: true,
