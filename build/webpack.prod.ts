@@ -12,32 +12,6 @@ import os from 'os';
 
 const nodePolyfillPlugin = require('node-polyfill-webpack-plugin');
 
-const useLocalNetworkAddress = true;
-const networkInterfaces = os.networkInterfaces();
-const nonLocalInterfaces: Record<string, os.NetworkInterfaceInfo[]> = {};
-let myNetworkAddress: string = Ip.address();
-if (useLocalNetworkAddress) {
-    for (const inet in networkInterfaces) {
-        const addresses = networkInterfaces[inet]!;
-        for (let i = 0; i < addresses.length; i++) {
-            const address = addresses[i];
-            if (!address.internal) {
-                if (!nonLocalInterfaces[inet]) {
-                    nonLocalInterfaces[inet] = [];
-                }
-                nonLocalInterfaces[inet].push(address);
-                if (address.address.includes('192.168')) {
-                    if(address.address !== '192.168.0.1') {
-                        myNetworkAddress = address.address;
-                    }
-                }
-            }
-        }
-    }
-    // console.log(nonLocalInterfaces);
-}
-
-
 const config: Webpack.Configuration & WebpackDevServer.Configuration = {
     devtool: 'source-map',
     mode: 'production',
