@@ -5,7 +5,8 @@ import localforage from 'localforage'
 export interface StorageData {
     name: string;
     atlas: string;
-    animation: string;
+    animation?: string;
+    skeleton?: string;
     image: string;
 }
 
@@ -44,6 +45,7 @@ export class DatabaseService {
             isBase64: true,
             atlasPath: item?.atlas,
             jsonPath: item?.animation,
+            skeletonPath: item?.skeleton,
             texturePath: item?.image
         };
     }

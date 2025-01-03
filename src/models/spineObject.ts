@@ -4,5 +4,6 @@ export interface SpineObject {
     isBase64?: boolean;
     atlasPath?: string;
     jsonPath?: string;
+    skeletonPath?: string;
     texturePath?: string;
 }

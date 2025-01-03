@@ -42,6 +42,9 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
         },
         open: 'index.html',
         static: [{ directory: Config.outPath }],
+        server: {
+            type: 'https',
+        },
     } as any,
     plugins: [
         new HtmlWebpackPlugin({
@@ -56,6 +59,9 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
             ],
         }),
         new nodePolyfillPlugin(),
+        new Webpack.optimize.LimitChunkCountPlugin({
+            maxChunks: 1
+        }),
     ],
     output: {
         filename: Config.outFileName,
@@ -68,7 +74,7 @@ const config: Webpack.Configuration & WebpackDevServer.Configuration = {
     },
     resolve: {
         mainFields: ['module', 'main'],
-        extensions: ['.ts', '.tsx', '.js', '.vue', '.json', '.d.ts'],
+        extensions: ['.ts', '.tsx', '.js', '.vue', '.json', '.d.ts', '.txt', '.skel'],
     },
 } as any;
 

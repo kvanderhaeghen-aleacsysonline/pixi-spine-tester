@@ -2,7 +2,7 @@
 <html>
     <head>
         <title>Pixi Spine Tester</title>
-        <link rel="icon" type="image/x-icon" href="/pixi-spine-tester/assets/aleacsys.ico" />
+        <link rel="icon" type="image/x-icon" href="./assets/aleacsys.ico" />
         <script>
             javascript: (function () {
                 var script = document.createElement('script');
@@ -30,10 +30,11 @@
         <script src="./pixiSpineTest.js"></script>
         <div id="gameContainer">
             <span>
-                <button id="add">Add</button>
-                <button id="move" disabled>Move</button>
-                <select id="spine-list"></select>
-                <select id="animation-list" disabled></select>
+                <button id="add" title="Add 100 spine objectd to the scene">Add</button>
+                <button id="move" title="Move all spine objects downwards" disabled>Move</button>
+                <select id="spine-list" title="Select the spine object you want to see in the canvas view"></select>
+                <select id="animation-list" title="Select the animation you want to play" disabled></select>
+                <select id="skin-list" title="Select the skin you want to use" disabled></select>
             </span>
             <div>
                 <span class="counter">
@@ -42,15 +43,15 @@
                     <label id="draw-calls">0 Draw Calls</label>
                 </span>
             </div>
-            <div id="gameDiv"></div>
+            <span>
+                <button id="remove" title="Remove selected drag-n-drop item from cache" disabled>Remove Current</button>
+                <button id="remove-all" title="Remove all drag-n-drop items from cache">Remove All</button>
+            </span>
         </div>
+        <div id="gameDiv"></div>
         <script>
+            if (!window.location.search.includes('renderer=')) window.location.search += '?renderer=webgl';
             PixiSpineTest.launch();
         </script>
-        <br />
-        <span>
-            <button id="remove" disabled>Remove Current</button>
-            <button id="remove-all">Remove All</button>
-        </span>
     </body>
 </html>

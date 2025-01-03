@@ -1,8 +1,7 @@
 {
-    "tslint.enable": false,
-    "prettier.configPath": "prettierrc.json",
+    "prettier.configPath": "build/prettierrc.json",
     "eslint.options": {
-        "configFile": "eslintrc.js",
+        "configFile": "build/eslintrc.js",
         "ignorePattern": "*.js"
     },
     "[typescript]": {
