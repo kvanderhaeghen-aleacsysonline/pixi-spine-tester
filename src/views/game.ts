@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import * as Pixi from 'pixi.js';
 import { createTickEventHandler, ITickEventHandler, ResolvablePromise } from "@gp/utils";
-import * as PixiSpine from '@pixi/spine-pixi';
+import * as PixiSpine from '@esotericsoftware/spine-pixi-v8';
 import { SpineObject } from '../models/spineObject';
 import { DatabaseService } from '../utils/database/database';
 import { v4 as uuidv4 } from 'uuid';
@@ -167,8 +167,8 @@ export class SpineMachine {
     private addMouseEvents(): void {
         this.app?.canvas.addEventListener('wheel', (event) => {
             const scale = 1 - (event.deltaY * 0.001);
-            const screenCenterX = (this.app!.view.width * 0.5);
-            const screenCenterY = (this.app!.view.height * 0.5);
+            const screenCenterX = (this.app!.canvas.width * 0.5);
+            const screenCenterY = (this.app!.canvas.height * 0.5);
             this.objectContainer.position.x = this.objectContainer.position.x + (screenCenterX - this.objectContainer.position.x) * (1 - scale);
             this.objectContainer.position.y = this.objectContainer.position.y + (screenCenterY - this.objectContainer.position.y) * (1 - scale);
             this.objectContainer.scale.x *= scale;
@@ -221,8 +221,8 @@ export class SpineMachine {
             } else {
                 const distance = Math.hypot(event.touches[0].clientX - event.touches[1].clientX, event.touches[0].clientY - event.touches[1].clientY);
                 const scale = distance / pinchDistance;
-                const screenCenterX = (this.app!.view.width * 0.5);
-                const screenCenterY = (this.app!.view.height * 0.5);
+                const screenCenterX = (this.app!.canvas.width * 0.5);
+                const screenCenterY = (this.app!.canvas.height * 0.5);
                 this.objectContainer.position.x = pinchCenter.x + (screenCenterX - pinchCenter.x) * scale;
                 this.objectContainer.position.y = pinchCenter.y + (screenCenterY - pinchCenter.y) * scale;
                 this.objectContainer.scale.x *= scale;
@@ -558,8 +558,8 @@ export class SpineMachine {
         
             // Set spine preview to center of the screen
             const scale = 0.5;
-            spineAnimation.x = (this.app!.view.width * 0.5);
-            spineAnimation.y = (this.app!.view.height * 0.5);
+            spineAnimation.x = (this.app!.canvas.width * 0.5);
+            spineAnimation.y = (this.app!.canvas.height * 0.5);
             spineAnimation.scale.set(scale);
             this.spinePreview = spineAnimation;
         } else {
